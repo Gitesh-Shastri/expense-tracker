@@ -1,0 +1,163 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Expense{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    {% if object %}Edit{% else %}Add{% endif %} Expense
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Please correct the following errors:</strong>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" step="0.01" min="0.01" class="form-control {% if form.amount.errors %}is-invalid{% endif %}" 
+                                   id="id_amount" name="amount" value="{{ form.amount.value|default:'' }}" required>
+                            {% if form.amount.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.amount.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        <input type="text" class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                               id="id_description" name="description" value="{{ form.description.value|default:'' }}" required>
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label">Category</label>
+                        <select class="form-select {% if form.category.errors %}is-invalid{% endif %}" 
+                                id="id_category" name="category" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {% if form.category.value == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.category.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_bank" class="form-label">Bank</label>
+                        <select class="form-select {% if form.bank.errors %}is-invalid{% endif %}" 
+                                id="id_bank" name="bank" required>
+                            <option value="">Select a bank</option>
+                            {% for bank in banks %}
+                                <option value="{{ bank.id }}" 
+                                        {% if form.bank.value == bank.id %}selected{% endif %}>
+                                    {{ bank.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.bank.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.bank.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_opening_balance" class="form-label">Opening Balance</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" step="0.01" class="form-control {% if form.opening_balance.errors %}is-invalid{% endif %}" 
+                                   id="id_opening_balance" name="opening_balance" value="{{ form.opening_balance.value|default:'0.00' }}">
+                            {% if form.opening_balance.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.opening_balance.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Set the initial balance for this bank account</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_transaction_type" class="form-label">Transaction Type</label>
+                        <select class="form-select {% if form.transaction_type.errors %}is-invalid{% endif %}" 
+                                id="id_transaction_type" name="transaction_type" required>
+                            <option value="">Select a type</option>
+                            <option value="DEBIT" {% if form.transaction_type.value == 'DEBIT' %}selected{% endif %}>Debit</option>
+                            <option value="CREDIT" {% if form.transaction_type.value == 'CREDIT' %}selected{% endif %}>Credit</option>
+                        </select>
+                        {% if form.transaction_type.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.transaction_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_date" class="form-label">Date & Time</label>
+                        <input type="datetime-local" class="form-control {% if form.date.errors %}is-invalid{% endif %}" 
+                               id="id_date" name="date" value="{{ form.date.value|date:'Y-m-d\TH:i'|default:'' }}" required>
+                        {% if form.date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'expenses:monthly_expenses' %}" class="btn btn-secondary">Cancel</a>
+                        <div>
+                            <button type="submit" name="save_and_add" class="btn btn-info me-2">
+                                Save and Add Another
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update{% else %}Save{% endif %} Expense
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set today's date and time as default for new expenses
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!document.getElementById('id_date').value) {
+            const now = new Date();
+            // Format the date and time to match the datetime-local input format
+            const formattedDateTime = now.toISOString().slice(0, 16);
+            document.getElementById('id_date').value = formattedDateTime;
+        }
+    });
+</script>
+{% endblock %} 

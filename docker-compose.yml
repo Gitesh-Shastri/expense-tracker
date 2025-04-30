@@ -1,0 +1,32 @@
+  services:
+    db:
+      image: postgres:13
+      container_name: expensetracker_db
+      env_file:
+        - .env
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U expensetracker -d expensetracker_db -h 127.0.0.1"]
+        interval: 10s
+        retries: 5
+        start_period: 30s
+        timeout: 5s
+    web:
+      build: ./app
+      container_name: expensetracker_app
+      command: sh -c "python manage.py runserver 0.0.0.0:8000"
+      volumes:
+        - ./app:/dockerapp
+      ports:
+        - "8000:8000"
+      env_file:
+        - .env
+      depends_on:
+        db:
+          condition: service_healthy
+
+  volumes:
+    postgres_data:

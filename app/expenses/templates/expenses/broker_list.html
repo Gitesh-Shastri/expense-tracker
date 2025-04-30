@@ -1,0 +1,76 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}Brokers - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Investment Brokers</h1>
+        <div>
+            <a href="{% url 'expenses:broker_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Broker
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Manage Brokers</h5>
+        </div>
+        <div class="card-body">
+            {% if brokers %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Account Number</th>
+                            <th>Description</th>
+                            <th>Website</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for broker in brokers %}
+                        <tr>
+                            <td>{{ broker.name }}</td>
+                            <td>{{ broker.account_number }}</td>
+                            <td>{{ broker.description|default:"-" }}</td>
+                            <td>
+                                {% if broker.website %}
+                                <a href="{{ broker.website }}" target="_blank">{{ broker.website }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'expenses:broker_edit' broker.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'expenses:broker_delete' broker.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No brokers found. <a href="{% url 'expenses:broker_create' %}">Add your first broker</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="mb-4">
+        <a href="{% url 'expenses:investment_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Investments
+        </a>
+    </div>
+</div>
+{% endblock %}

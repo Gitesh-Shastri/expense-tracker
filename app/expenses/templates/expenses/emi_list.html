@@ -1,0 +1,233 @@
+{% extends 'expenses/base.html' %}
+{% load static %}
+
+{% block title %}EMI Management - {{ month|date:"F Y" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Month Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="?month={{ prev_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Previous Month
+                </a>
+                <h2 class="text-center mb-0">{{ month|date:"F Y" }}</h2>
+                <a href="?month={{ next_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    Next Month <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending EMIs</h5>
+                    <h2 class="card-text">{{ pending_emis.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Paid EMIs</h5>
+                    <h2 class="card-text">{{ paid_emis.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Amount</h5>
+                    <h2 class="card-text">₹{{ pending_total|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Paid Amount</h5>
+                    <h2 class="card-text">₹{{ paid_total|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending EMIs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Pending EMIs</h5>
+                    <a href="{% url 'expenses:emi_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add EMI
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Bank</th>
+                                    <th>Amount</th>
+                                    <th>Due Date</th>
+                                    <th>End Date</th>
+                                    <th>Months Remaining</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emi in pending_emis %}
+                                <tr>
+                                    <td>{{ emi.description }}</td>
+                                    <td>{{ emi.bank.name }}</td>
+                                    <td>₹{{ emi.amount|floatformat:2 }}</td>
+                                    <td>{{ emi.due_date_time|date:"d M Y H:i" }}</td>
+                                    <td>{{ emi.end_date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% with months_remaining=emi.get_months_remaining %}
+                                            {% if months_remaining > 0 %}
+                                                {{ months_remaining }} month{{ months_remaining|pluralize }}
+                                            {% else %}
+                                                Last Month
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success mark-paid" data-emi-id="{{ emi.id }}">
+                                            <i class="fas fa-check"></i> Mark as Paid
+                                        </button>
+                                        <a href="{% url 'expenses:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'expenses:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No pending EMIs for {{ month|date:"F Y" }}.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paid EMIs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Paid EMIs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Bank</th>
+                                    <th>Amount</th>
+                                    <th>Due Date</th>
+                                    <th>End Date</th>
+                                    <th>Months Remaining</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emi in paid_emis %}
+                                <tr>
+                                    <td>{{ emi.description }}</td>
+                                    <td>{{ emi.bank.name }}</td>
+                                    <td>₹{{ emi.amount|floatformat:2 }}</td>
+                                    <td>{{ emi.due_date_time|date:"d M Y H:i" }}</td>
+                                    <td>{{ emi.end_date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% with months_remaining=emi.get_months_remaining %}
+                                            {% if months_remaining > 0 %}
+                                                {{ months_remaining }} month{{ months_remaining|pluralize }}
+                                            {% else %}
+                                                Last Month
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'expenses:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'expenses:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No paid EMIs for {{ month|date:"F Y" }}.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const markPaidButtons = document.querySelectorAll('.mark-paid');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+    }
+
+    markPaidButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const emiId = this.dataset.emiId;
+            if (confirm('Are you sure you want to mark this EMI as paid?')) {
+                fetch(`/expenses/emi/${emiId}/mark-paid/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken.value,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Preserve the current month parameter when reloading
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const monthParam = urlParams.get('month');
+                        if (monthParam) {
+                            window.location.href = `${window.location.pathname}?month=${monthParam}`;
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        alert('Error marking EMI as paid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error marking EMI as paid');
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

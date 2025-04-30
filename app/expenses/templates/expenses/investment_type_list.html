@@ -1,0 +1,76 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}Investment Types - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Investment Types</h1>
+        <div>
+            <a href="{% url 'expenses:investment_type_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Investment Type
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Manage Investment Types</h5>
+        </div>
+        <div class="card-body">
+            {% if investment_types %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Risk Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type in investment_types %}
+                        <tr>
+                            <td>{{ type.name }}</td>
+                            <td>{{ type.description|default:"-" }}</td>
+                            <td>
+                                {% if type.risk_level == 'LOW' %}
+                                    <span class="badge bg-success">Low Risk</span>
+                                {% elif type.risk_level == 'MEDIUM' %}
+                                    <span class="badge bg-warning">Medium Risk</span>
+                                {% else %}
+                                    <span class="badge bg-danger">High Risk</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'expenses:investment_type_edit' type.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'expenses:investment_type_delete' type.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No investment types found. <a href="{% url 'expenses:investment_type_create' %}">Add your first investment type</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="mb-4">
+        <a href="{% url 'expenses:investment_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Investments
+        </a>
+    </div>
+</div>
+{% endblock %}

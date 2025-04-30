@@ -1,0 +1,189 @@
+{% extends 'expenses/base.html' %}
+
+{% block title %}Investments - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Investments</h1>
+        <div>
+            <a href="{% url 'expenses:investment_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Investment
+            </a>
+            <a href="{% url 'expenses:broker_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-building"></i> Manage Brokers
+            </a>
+            <a href="{% url 'expenses:investment_type_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-tags"></i> Manage Types
+            </a>
+        </div>
+    </div>
+
+    <!-- Investment Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Investment Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Invested</h5>
+                            <h3>₹{{ total_invested|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Current Value</h5>
+                            <h3>₹{{ total_value|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card {% if total_profit_loss >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Profit/Loss</h5>
+                            <h3>₹{{ total_profit_loss|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Return %</h5>
+                            {% if total_invested > 0 %}
+                                <h3>{{ total_profit_loss|floatformat:2|default:"0" }}%</h3>
+                            {% else %}
+                                <h3>0%</h3>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Investments -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Active Investments</h5>
+        </div>
+        <div class="card-body">
+            {% if active_investments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Broker</th>
+                            <th>Purchase Date</th>
+                            <th>Amount</th>
+                            <th>Units</th>
+                            <th>Current Value</th>
+                            <th>P/L</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for investment in active_investments %}
+                        <tr>
+                            <td>{{ investment.name }}</td>
+                            <td>{{ investment.investment_type }}</td>
+                            <td>{{ investment.broker.name }}</td>
+                            <td>{{ investment.purchase_date }}</td>
+                            <td>₹{{ investment.amount|floatformat:2 }}</td>
+                            <td>{{ investment.units|floatformat:4 }}</td>
+                            <td>₹{{ investment.current_price|floatformat:2 }}</td>
+                            <td class="{% if investment.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ investment.profit_loss|floatformat:2 }}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'expenses:investment_edit' investment.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'expenses:investment_delete' investment.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No active investments found. <a href="{% url 'expenses:investment_create' %}">Add your first investment</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Closed Investments -->
+    {% if closed_investments %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Closed Investments</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Broker</th>
+                            <th>Purchase Date</th>
+                            <th>Amount</th>
+                            <th>P/L</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for investment in closed_investments %}
+                        <tr>
+                            <td>{{ investment.name }}</td>
+                            <td>{{ investment.investment_type }}</td>
+                            <td>{{ investment.broker.name }}</td>
+                            <td>{{ investment.purchase_date }}</td>
+                            <td>₹{{ investment.amount|floatformat:2 }}</td>
+                            <td class="{% if investment.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ investment.profit_loss|floatformat:2 }}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'expenses:investment_edit' investment.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'expenses:investment_delete' investment.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <div class="mb-4 d-flex justify-content-between">
+        <a href="{% url 'expenses:monthly_expenses' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Expenses
+        </a>
+        {% if active_investments %}
+        <a href="{% url 'expenses:investment_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Investment
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

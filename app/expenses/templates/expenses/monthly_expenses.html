@@ -1,0 +1,234 @@
+{% extends 'expenses/base.html' %}
+{% load static %}
+
+{% block title %}Monthly Expenses - {{ month|date:"F Y" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Month Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="?month={{ prev_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Previous Month
+                </a>
+                <h2 class="text-center mb-0">{{ month|date:"F Y" }}</h2>
+                <a href="?month={{ next_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    Next Month <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h2 class="card-text">₹{{ total_expenses|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Income</h5>
+                    <h2 class="card-text">₹{{ total_income|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Opening Balance</h5>
+                    <h2 class="card-text">₹{{ total_opening_balance|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Balance</h5>
+                    <h2 class="card-text">₹{{ balance|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#categoryBreakdown">
+                            Category-wise Breakdown
+                        </button>
+                    </h5>
+                </div>
+                <div class="collapse" id="categoryBreakdown">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Debit</th>
+                                        <th>Credit</th>
+                                        <th>Percentage</th>
+                                        <th>Transactions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in category_breakdown %}
+                                    <tr>
+                                        <td>{{ item.category.name }}</td>
+                                        <td>₹{{ item.debit|floatformat:2 }}</td>
+                                        <td>₹{{ item.credit|floatformat:2 }}</td>
+                                        <td>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ item.percentage }}%"
+                                                     aria-valuenow="{{ item.percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ item.percentage }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ item.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#bankSummary">
+                            Bank-wise Summary
+                        </button>
+                    </h5>
+                </div>
+                <div class="collapse" id="bankSummary">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Bank</th>
+                                        <th>Opening Balance</th>
+                                        <th>Debit</th>
+                                        <th>Credit</th>
+                                        <th>Current Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in bank_summary %}
+                                    <tr>
+                                        <td>{{ item.bank.name }}</td>
+                                        <td>₹{{ item.opening_balance|default:0|floatformat:2 }}</td>
+                                        <td>₹{{ item.debit|floatformat:2 }}</td>
+                                        <td>₹{{ item.credit|floatformat:2 }}</td>
+                                        <td class="{% if item.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ₹{{ item.balance|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank-wise Transactions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for bank_id, bank_data in bank_transactions.items %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0">
+                                <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#bankTransactions{{ bank_id }}">
+                                    {{ bank_data.bank.name }} ( {{ bank_data.bank.account_type }} )
+                                </button>
+                            </h5>
+                            <small class="text-muted">
+                                Opening Balance: ₹{{ bank_data.opening_balance|default:0|floatformat:2 }} | 
+                                Current Balance: ₹{{ bank_data.current_balance|floatformat:2 }}
+                            </small>
+                        </div>
+                        <a href="{% url 'expenses:expense_create' %}?bank={{ bank_data.bank.id }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Transaction
+                        </a>
+                    </div>
+                </div>
+                <div class="collapse" id="bankTransactions{{ bank_id }}">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in bank_data.transactions %}
+                                    <tr>
+                                        <td>{{ expense.date|date:"d M Y" }}</td>
+                                        <td>{{ expense.description }}</td>
+                                        <td>{{ expense.category.name }}</td>
+                                        <td>
+                                            <span class="badge {% if expense.transaction_type == 'DEBIT' %}bg-danger{% else %}bg-success{% endif %}">
+                                                {{ expense.transaction_type }}
+                                            </span>
+                                        </td>
+                                        <td>₹{{ expense.amount|floatformat:2 }}</td>
+                                        <td>
+                                            <a href="{% url 'expenses:expense_edit' expense.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'expenses:expense_create' %}?bank={{ expense.bank.id }}&amount={{ expense.amount }}&description={{ expense.description|urlencode }}&category={{ expense.category.id }}&transaction_type={{ expense.transaction_type }}&date={{ expense.date|date:'Y-m-d' }}" 
+                                               class="btn btn-sm btn-outline-info" title="Clone this transaction">
+                                                <i class="fas fa-copy"></i>
+                                            </a>
+                                            <a href="{% url 'expenses:expense_delete' expense.pk %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No transactions found for this bank.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
