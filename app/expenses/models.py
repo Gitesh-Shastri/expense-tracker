@@ -101,19 +101,40 @@ class EMI(models.Model):
             self.status = 'PAID'
             self.save()
             
-            # Create a new EMI entry for next month if we haven't reached the end date
-            next_month = self.due_date_time.replace(
-                month=self.due_date_time.month % 12 + 1,
-                year=self.due_date_time.year + (self.due_date_time.month // 12)
+            # Create an expense record for the paid EMI
+            Expense.objects.create(
+                user=self.user,
+                bank=self.bank,
+                amount=self.amount,
+                description=f"EMI Payment: {self.description}",
+                category=self.category,
+                transaction_type='DEBIT',
+                date=timezone.now()
             )
             
-            if next_month.date() <= self.end_date:
-                # Calculate next due date (same day and time as original due date)
-                next_due_date_time = next_month.replace(
-                    day=self.due_date_time.day,
+            # Create a new EMI entry for next month if we haven't reached the end date
+    
+            # Calculate next month properly using timezone-aware dates
+            if self.due_date_time.month == 12:
+                next_month = timezone.datetime(
+                    year=self.due_date_time.year + 1,
+                    month=1,
+                    day=min(self.due_date_time.day, 28),  # Avoid invalid dates for February
                     hour=self.due_date_time.hour,
-                    minute=self.due_date_time.minute
+                    minute=self.due_date_time.minute,
+                    tzinfo=timezone.get_current_timezone()
                 )
+            else:
+                next_month = timezone.datetime(
+                    year=self.due_date_time.year,
+                    month=self.due_date_time.month + 1,
+                    day=min(self.due_date_time.day, 28),  # Avoid invalid dates
+                    hour=self.due_date_time.hour,
+                    minute=self.due_date_time.minute,
+                    tzinfo=timezone.get_current_timezone()
+                )
+            
+            if next_month.date() <= self.end_date:
                 EMI.objects.create(
                     user=self.user,
                     bank=self.bank,
@@ -122,7 +143,7 @@ class EMI(models.Model):
                     category=self.category,
                     start_date=self.start_date,
                     end_date=self.end_date,
-                    due_date_time=next_due_date_time,
+                    due_date_time=next_month,
                     status='PENDING'
                 )
 

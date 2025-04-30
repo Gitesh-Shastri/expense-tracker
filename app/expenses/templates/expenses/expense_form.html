@@ -150,14 +150,17 @@
 </div>
 
 <script>
-    // Set today's date and time as default for new expenses
     document.addEventListener('DOMContentLoaded', function() {
         if (!document.getElementById('id_date').value) {
             const now = new Date();
-            // Format the date and time to match the datetime-local input format
-            const formattedDateTime = now.toISOString().slice(0, 16);
+            
+            // Format using ISO string for better timezone handling
+            const isoDateTime = now.toISOString();
+            // Format: YYYY-MM-DDThh:mm
+            const formattedDateTime = isoDateTime.substring(0, isoDateTime.lastIndexOf(':'));
+            
             document.getElementById('id_date').value = formattedDateTime;
         }
     });
 </script>
-{% endblock %} 
+{% endblock %}

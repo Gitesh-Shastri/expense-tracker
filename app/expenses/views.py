@@ -5,9 +5,10 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from .models import Expense, Category, Bank, EMI, Investment, Broker, InvestmentType
+from .models import Expense, Category, Bank, EMI, Investment, Broker,InvestmentType
 from .forms import ExpenseForm, BrokerForm, InvestmentTypeForm, InvestmentForm
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 # Create your views here.
 
@@ -20,9 +21,15 @@ class MonthlyExpenseView(LoginRequiredMixin, ListView):
         # Get the month from URL parameter or use current month
         month_str = self.request.GET.get('month')
         if month_str:
-            month = datetime.strptime(month_str, '%Y-%m')
+            # Create timezone-aware datetime object
+            naive_month = datetime.strptime(month_str, '%Y-%m')
+            month = timezone.make_aware(
+                naive_month, 
+                timezone.get_current_timezone()
+            )
         else:
-            month = timezone.now().replace(day=1)
+            # Use Django's timezone-aware now
+            month = timezone.localtime(timezone.now()).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Set the month in the view
         self.month = month
@@ -37,7 +44,7 @@ class MonthlyExpenseView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Add month information
+        # Add month information - use timezone-aware arithmetic
         context['month'] = self.month
         context['prev_month'] = self.month - timedelta(days=1)
         context['next_month'] = (self.month.replace(day=28) + timedelta(days=4)).replace(day=1)
@@ -82,7 +89,8 @@ class MonthlyExpenseView(LoginRequiredMixin, ListView):
             all_bank_expenses = Expense.objects.filter(
                 user=self.request.user,
                 bank=bank,
-                date__lte=self.month.replace(day=1) + timedelta(days=32)
+                date__lt=self.month.replace(day=1) + relativedelta(months=1),
+                date__gte=self.month.replace(day=1)
             ).order_by('date')
             
             # Get opening balance from the first expense record
@@ -233,9 +241,15 @@ class EMIListView(LoginRequiredMixin, ListView):
         # Get the month from URL parameter or use current month
         month_str = self.request.GET.get('month')
         if month_str:
-            month = datetime.strptime(month_str, '%Y-%m')
+            # Create timezone-aware datetime object
+            naive_month = datetime.strptime(month_str, '%Y-%m')
+            month = timezone.make_aware(
+                naive_month, 
+                timezone.get_current_timezone()
+            )
         else:
-            month = timezone.now().replace(day=1)
+            # Use Django's timezone-aware now
+            month = timezone.localtime(timezone.now()).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Set the month in the view
         self.month = month
@@ -245,7 +259,7 @@ class EMIListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Add month information for navigation
+        # Add month information for navigation with timezone-aware objects
         context['month'] = self.month
         context['prev_month'] = self.month - timedelta(days=1)
         context['next_month'] = (self.month.replace(day=28) + timedelta(days=4)).replace(day=1)
@@ -273,7 +287,7 @@ class EMIListView(LoginRequiredMixin, ListView):
             'paid_emis': current_month_paid_emis,
             'pending_total': pending_total,
             'paid_total': paid_total,
-            'today': timezone.now(),
+            'today': timezone.localtime(timezone.now()),  # Use timezone-aware current time
         })
         
         return context

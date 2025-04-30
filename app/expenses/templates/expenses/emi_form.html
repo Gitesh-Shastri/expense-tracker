@@ -158,18 +158,29 @@
 </div>
 
 <script>
-    // Set today's date as default for new EMIs
+    // Set today's date as default for new EMIs with proper timezone handling
     document.addEventListener('DOMContentLoaded', function() {
+        // Use ISO format for dates to ensure proper timezone handling
+        const now = new Date();
+        
         if (!document.getElementById('id_start_date').value) {
-            document.getElementById('id_start_date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('id_start_date').value = now.toISOString().split('T')[0];
         }
+        
         if (!document.getElementById('id_end_date').value) {
             // Set end date to 1 year from start date
-            const startDate = new Date(document.getElementById('id_start_date').value);
-            const endDate = new Date(startDate);
+            const endDate = new Date(now);
             endDate.setFullYear(endDate.getFullYear() + 1);
             document.getElementById('id_end_date').value = endDate.toISOString().split('T')[0];
         }
+        
+        if (!document.getElementById('id_due_date_time').value) {
+            // Set current time as default for due_date_time
+            const isoDateTime = now.toISOString();
+            // Format: YYYY-MM-DDThh:mm
+            const formattedDateTime = isoDateTime.substring(0, isoDateTime.lastIndexOf(':'));
+            document.getElementById('id_due_date_time').value = formattedDateTime;
+        }
     });
 </script>
-{% endblock %} 
+{% endblock %}
