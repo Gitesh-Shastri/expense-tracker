@@ -23,4 +23,3 @@ class EMIAdmin(admin.ModelAdmin):
 admin.site.register(Bank, BankAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Expense, ExpenseAdmin)
-admin.site.register(EMI, EMIAdmin)

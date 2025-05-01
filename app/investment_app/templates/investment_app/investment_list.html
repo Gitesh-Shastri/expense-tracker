@@ -1,0 +1,265 @@
+{% extends 'expensetracker/base.html' %}
+{% load static %}
+{% load investment_filters %}
+
+{% block title %}Investment Portfolio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Investment Summary</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Invested</h5>
+                            <h2 class="card-text">
+                                {% for currency, amount in total_invested_by_currency.items %}
+                                    {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}<br>
+                                {% endfor %}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Current Value</h5>
+                            <h2 class="card-text">
+                                {% for currency, amount in total_value_by_currency.items %}
+                                    {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}<br>
+                                {% endfor %}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card {% if total_profit_loss > 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Profit/Loss</h5>
+                            <h2 class="card-text">
+                                {% for currency, amount in profit_loss_by_currency.items %}
+                                    {% if amount > 0 %}
+                                        <span class="text-white">+{% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}</span><br>
+                                    {% else %}
+                                        <span class="text-white">{% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}</span><br>
+                                    {% endif %}
+                                {% endfor %}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Types Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Investment Types</h5>
+                    <a href="{% url 'investment_app:investment_type_list' %}" class="btn btn-sm btn-outline-primary">Manage Types</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Count</th>
+                                    <th>Amount Invested</th>
+                                    <th>Current Value</th>
+                                    <th>Profit/Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for id, type_data in investment_types.items %}
+                                <tr>
+                                    <td>{{ type_data.name }}</td>
+                                    <td>{{ type_data.count }}</td>
+                                    <td>₹{{ type_data.amount|floatformat:2 }}</td>
+                                    <td>₹{{ type_data.current_value|floatformat:2 }}</td>
+                                    <td class="{% if type_data.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if type_data.profit_loss > 0 %}+{% endif %}₹{{ type_data.profit_loss|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No investment types found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brokers Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Brokers</h5>
+                    <a href="{% url 'investment_app:broker_list' %}" class="btn btn-sm btn-outline-primary">Manage Brokers</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Broker</th>
+                                    <th>Count</th>
+                                    <th>Amount Invested</th>
+                                    <th>Current Value</th>
+                                    <th>Profit/Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for id, broker_data in brokers.items %}
+                                <tr>
+                                    <td>{{ broker_data.name }}</td>
+                                    <td>{{ broker_data.count }}</td>
+                                    <td>₹{{ broker_data.amount|floatformat:2 }}</td>
+                                    <td>₹{{ broker_data.current_value|floatformat:2 }}</td>
+                                    <td class="{% if broker_data.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if broker_data.profit_loss > 0 %}+{% endif %}₹{{ broker_data.profit_loss|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No brokers found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Investments -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Active Investments</h5>
+                    <a href="{% url 'investment_app:investment_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Investment
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Broker</th>
+                                    <th>Purchase Price</th>
+                                    <th>Current Price</th>
+                                    <th>Units</th>
+                                    <th>Amount</th>
+                                    <th>Current Value</th>
+                                    <th>Profit/Loss</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in active_investments %}
+                                <tr>
+                                    <td>{{ investment.name }}</td>
+                                    <td>{{ investment.investment_type.name }}</td>
+                                    <td>{{ investment.broker.name }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.purchase_price|floatformat:2 }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.current_price|floatformat:2 }}</td>
+                                    <td>{{ investment.units|floatformat:4 }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.amount|floatformat:2 }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.current_price|multiply:investment.units|floatformat:2 }}</td>
+                                    <td class="{% if investment.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if investment.profit_loss > 0 %}+{% endif %}{{ investment.get_currency_symbol }}{{ investment.profit_loss|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'investment_app:investment_edit' investment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'investment_app:investment_delete' investment.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center">No active investments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Closed Investments -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Closed Investments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Broker</th>
+                                    <th>Purchase Price</th>
+                                    <th>Units</th>
+                                    <th>Amount</th>
+                                    <th>Profit/Loss</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in closed_investments %}
+                                <tr>
+                                    <td>{{ investment.name }}</td>
+                                    <td>{{ investment.investment_type.name }}</td>
+                                    <td>{{ investment.broker.name }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.purchase_price|floatformat:2 }}</td>
+                                    <td>{{ investment.units|floatformat:4 }}</td>
+                                    <td>{{ investment.get_currency_symbol }}{{ investment.amount|floatformat:2 }}</td>
+                                    <td class="{% if investment.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if investment.profit_loss > 0 %}+{% endif %}{{ investment.get_currency_symbol }}{{ investment.profit_loss|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'investment_app:investment_edit' investment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'investment_app:investment_delete' investment.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No closed investments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

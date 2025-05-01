@@ -1,0 +1,88 @@
+{% extends 'expensetracker/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit EMI{% else %}Add EMI{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% if form.instance.pk %}Edit EMI{% else %}Add EMI{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_bank" class="form-label">Bank</label>
+                            <select name="bank" class="form-select" id="id_bank" required>
+                                <option value="">-- Select Bank --</option>
+                                {% for bank in banks %}
+                                <option value="{{ bank.id }}" {% if form.instance.bank_id == bank.id %}selected{% endif %}>{{ bank.name }} ({{ bank.account_type }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_amount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" step="0.01" min="0" class="form-control" id="id_amount" value="{{ form.instance.amount|default:'' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            <input type="text" name="description" class="form-control" id="id_description" value="{{ form.instance.description|default:'' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_category" class="form-label">Category</label>
+                            <select name="category" class="form-select" id="id_category">
+                                <option value="">-- Select Category --</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if form.instance.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" id="id_start_date" value="{{ form.instance.start_date|date:'Y-m-d'|default:'' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control" id="id_end_date" value="{{ form.instance.end_date|date:'Y-m-d'|default:'' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_due_date_time" class="form-label">Due Date and Time</label>
+                            <input type="datetime-local" name="due_date_time" class="form-control" id="id_due_date_time" value="{{ form.instance.due_date_time|date:'Y-m-d\TH:i'|default:'' }}" required>
+                        </div>
+                        
+                        {% if form.instance.pk %}
+                        <div class="mb-3">
+                            <label for="id_status" class="form-label">Status</label>
+                            <select name="status" class="form-select" id="id_status" required>
+                                <option value="PENDING" {% if form.instance.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                <option value="PAID" {% if form.instance.status == 'PAID' %}selected{% endif %}>Paid</option>
+                                <option value="SKIPPED" {% if form.instance.status == 'SKIPPED' %}selected{% endif %}>Skipped</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Save Changes{% else %}Add EMI{% endif %}
+                            </button>
+                            <a href="{% url 'emi_app:emi_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

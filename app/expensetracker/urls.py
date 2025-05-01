@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from expenses.views import home
+from .views import home
 
 urlpatterns = [
     path('', home, name='home'),  # Set home view as the root URL
     path('admin/', admin.site.urls),
     
-    # Each feature has its own URL namespace for better organization
-    path('expenses/', include('expenses.urls.expense_urls')),
-    path('emis/', include('expenses.urls.emi_urls')),
-    path('investments/', include('expenses.urls.investment_urls')),
+    # Each feature has its own app and URL namespace
+    path('expenses/', include('expenses.urls')),
+    path('emi/', include('emi_app.urls')),
+    path('investment/', include('investment_app.urls')),
 ]
