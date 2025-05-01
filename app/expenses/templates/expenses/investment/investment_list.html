@@ -7,13 +7,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Investments</h1>
         <div>
-            <a href="{% url 'expenses:investment_create' %}" class="btn btn-primary">
+            <a href="{% url 'investments:investment_create' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add Investment
             </a>
-            <a href="{% url 'expenses:broker_list' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'investments:broker_list' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-building"></i> Manage Brokers
             </a>
-            <a href="{% url 'expenses:investment_type_list' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'investments:investment_type_list' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-tags"></i> Manage Types
             </a>
         </div>
@@ -30,7 +30,16 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body">
                             <h5 class="card-title">Total Invested</h5>
-                            <h3>₹{{ total_invested|floatformat:2 }}</h3>
+                            <h3>
+                                {% if total_invested_by_currency %}
+                                    {% for currency, amount in total_invested_by_currency.items %}
+                                        {% if not forloop.first %}<br>{% endif %}
+                                        {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% elif currency == 'JPY' %}¥{% elif currency == 'AUD' %}A${% elif currency == 'CAD' %}C${% elif currency == 'SGD' %}S${% endif %}{{ amount|floatformat:2 }}
+                                    {% endfor %}
+                                {% else %}
+                                    ₹{{ total_invested|floatformat:2 }}
+                                {% endif %}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -38,15 +47,37 @@
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">Current Value</h5>
-                            <h3>₹{{ total_value|floatformat:2 }}</h3>
+                            <h3>
+                                {% if total_value_by_currency %}
+                                    {% for currency, amount in total_value_by_currency.items %}
+                                        {% if not forloop.first %}<br>{% endif %}
+                                        {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% elif currency == 'JPY' %}¥{% elif currency == 'AUD' %}A${% elif currency == 'CAD' %}C${% elif currency == 'SGD' %}S${% endif %}{{ amount|floatformat:2 }}
+                                    {% endfor %}
+                                {% else %}
+                                    ₹{{ total_value|floatformat:2 }}
+                                {% endif %}
+                            </h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <div class="card {% if total_profit_loss >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <div class="card bg-success text-white">
                         <div class="card-body">
                             <h5 class="card-title">Profit/Loss</h5>
-                            <h3>₹{{ total_profit_loss|floatformat:2 }}</h3>
+                            <h3>
+                                {% if profit_loss_by_currency %}
+                                    {% for currency, amount in profit_loss_by_currency.items %}
+                                        {% if not forloop.first %}<br>{% endif %}
+                                        <span class="{% if amount >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% elif currency == 'JPY' %}¥{% elif currency == 'AUD' %}A${% elif currency == 'CAD' %}C${% elif currency == 'SGD' %}S${% endif %}{{ amount|floatformat:2 }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="{% if total_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ₹{{ total_profit_loss|floatformat:2 }}
+                                    </span>
+                                {% endif %}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -95,18 +126,22 @@
                             <td>{{ investment.investment_type }}</td>
                             <td>{{ investment.broker.name }}</td>
                             <td>{{ investment.purchase_date }}</td>
-                            <td>₹{{ investment.amount|floatformat:2 }}</td>
+                            <td>
+                                {% if investment.currency == 'INR' %}₹{% elif investment.currency == 'USD' %}${% elif investment.currency == 'EUR' %}€{% elif investment.currency == 'GBP' %}£{% elif investment.currency == 'JPY' %}¥{% elif investment.currency == 'AUD' %}A${% elif investment.currency == 'CAD' %}C${% elif investment.currency == 'SGD' %}S${% endif %}{{ investment.amount|floatformat:2 }}
+                            </td>
                             <td>{{ investment.units|floatformat:4 }}</td>
-                            <td>₹{{ investment.current_price|floatformat:2 }}</td>
+                            <td>
+                                {% if investment.currency == 'INR' %}₹{% elif investment.currency == 'USD' %}${% elif investment.currency == 'EUR' %}€{% elif investment.currency == 'GBP' %}£{% elif investment.currency == 'JPY' %}¥{% elif investment.currency == 'AUD' %}A${% elif investment.currency == 'CAD' %}C${% elif investment.currency == 'SGD' %}S${% endif %}{{ investment.current_price|floatformat:2 }}
+                            </td>
                             <td class="{% if investment.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                ₹{{ investment.profit_loss|floatformat:2 }}
+                                {% if investment.currency == 'INR' %}₹{% elif investment.currency == 'USD' %}${% elif investment.currency == 'EUR' %}€{% elif investment.currency == 'GBP' %}£{% elif investment.currency == 'JPY' %}¥{% elif investment.currency == 'AUD' %}A${% elif investment.currency == 'CAD' %}C${% elif investment.currency == 'SGD' %}S${% endif %}{{ investment.profit_loss|floatformat:2 }}
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'expenses:investment_edit' investment.id %}" class="btn btn-outline-primary">
+                                    <a href="{% url 'investments:investment_edit' investment.id %}" class="btn btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{% url 'expenses:investment_delete' investment.id %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'investments:investment_delete' investment.id %}" class="btn btn-outline-danger">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>
@@ -118,7 +153,7 @@
             </div>
             {% else %}
             <div class="alert alert-info">
-                No active investments found. <a href="{% url 'expenses:investment_create' %}">Add your first investment</a>.
+                No active investments found. <a href="{% url 'investments:investment_create' %}">Add your first investment</a>.
             </div>
             {% endif %}
         </div>
@@ -151,16 +186,18 @@
                             <td>{{ investment.investment_type }}</td>
                             <td>{{ investment.broker.name }}</td>
                             <td>{{ investment.purchase_date }}</td>
-                            <td>₹{{ investment.amount|floatformat:2 }}</td>
+                            <td>
+                                {% if investment.currency == 'INR' %}₹{% elif investment.currency == 'USD' %}${% elif investment.currency == 'EUR' %}€{% elif investment.currency == 'GBP' %}£{% elif investment.currency == 'JPY' %}¥{% elif investment.currency == 'AUD' %}A${% elif investment.currency == 'CAD' %}C${% elif investment.currency == 'SGD' %}S${% endif %}{{ investment.amount|floatformat:2 }}
+                            </td>
                             <td class="{% if investment.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                ₹{{ investment.profit_loss|floatformat:2 }}
+                                {% if investment.currency == 'INR' %}₹{% elif investment.currency == 'USD' %}${% elif investment.currency == 'EUR' %}€{% elif investment.currency == 'GBP' %}£{% elif investment.currency == 'JPY' %}¥{% elif investment.currency == 'AUD' %}A${% elif investment.currency == 'CAD' %}C${% elif investment.currency == 'SGD' %}S${% endif %}{{ investment.profit_loss|floatformat:2 }}
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'expenses:investment_edit' investment.id %}" class="btn btn-outline-primary">
+                                    <a href="{% url 'investments:investment_edit' investment.id %}" class="btn btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{% url 'expenses:investment_delete' investment.id %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'investments:investment_delete' investment.id %}" class="btn btn-outline-danger">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>
@@ -180,7 +217,7 @@
             <i class="fas fa-arrow-left"></i> Back to Expenses
         </a>
         {% if active_investments %}
-        <a href="{% url 'expenses:investment_create' %}" class="btn btn-primary">
+        <a href="{% url 'investments:investment_create' %}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add New Investment
         </a>
         {% endif %}

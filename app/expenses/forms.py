@@ -41,7 +41,7 @@ class InvestmentForm(forms.ModelForm):
     class Meta:
         model = Investment
         fields = [
-            'broker', 'investment_type', 'name', 'amount', 'units', 
+            'broker', 'investment_type', 'name', 'amount', 'currency', 'units', 
             'purchase_price', 'current_price', 'purchase_date', 
             'transaction_type', 'status', 'maturity_date', 'notes'
         ]

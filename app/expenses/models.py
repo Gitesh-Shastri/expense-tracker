@@ -186,12 +186,24 @@ class Investment(models.Model):
         ('ACTIVE', 'Active'),
         ('CLOSED', 'Closed'),
     ]
+    
+    CURRENCY_CHOICES = [
+        ('INR', 'Indian Rupee (₹)'),
+        ('USD', 'US Dollar ($)'),
+        ('EUR', 'Euro (€)'),
+        ('GBP', 'British Pound (£)'),
+        ('JPY', 'Japanese Yen (¥)'),
+        ('AUD', 'Australian Dollar (A$)'),
+        ('CAD', 'Canadian Dollar (C$)'),
+        ('SGD', 'Singapore Dollar (S$)'),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     broker = models.ForeignKey(Broker, on_delete=models.CASCADE)
     investment_type = models.ForeignKey(InvestmentType, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='INR')
     units = models.DecimalField(max_digits=15, decimal_places=4, default=1.0)
     purchase_price = models.DecimalField(max_digits=15, decimal_places=2)
     current_price = models.DecimalField(max_digits=15, decimal_places=2)
@@ -205,7 +217,22 @@ class Investment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} - {self.investment_type}"
+        currency_symbols = {
+            'INR': '₹',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+            'AUD': 'A$',
+            'CAD': 'C$',
+            'SGD': 'S$',
+        }
+        symbol = currency_symbols.get(self.currency, self.currency)
+        return f"{self.name} - {symbol}{self.amount} - {self.investment_type}"
+    
+    class Meta:
+        verbose_name_plural = "Investments"
+        ordering = ['-purchase_date']
 
     def save(self, *args, **kwargs):
         # Calculate profit/loss
@@ -215,3 +242,16 @@ class Investment(models.Model):
             else:  # SELL
                 self.profit_loss = (self.purchase_price - self.current_price) * self.units
         super().save(*args, **kwargs)
+    
+    def get_currency_symbol(self):
+        currency_symbols = {
+            'INR': '₹',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+            'AUD': 'A$',
+            'CAD': 'C$',
+            'SGD': 'S$',
+        }
+        return currency_symbols.get(self.currency, self.currency)

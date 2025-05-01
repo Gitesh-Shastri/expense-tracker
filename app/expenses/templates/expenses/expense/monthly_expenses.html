@@ -194,7 +194,7 @@
                                 <tbody>
                                     {% for expense in bank_data.transactions %}
                                     <tr>
-                                        <td>{{ expense.date|date:"d M Y" }}</td>
+                                        <td>{{ expense.date|date:"d M Y H:m a" }}</td>
                                         <td>{{ expense.description }}</td>
                                         <td>{{ expense.category.name }}</td>
                                         <td>

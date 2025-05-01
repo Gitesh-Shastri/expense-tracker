@@ -62,7 +62,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Pending EMIs</h5>
-                    <a href="{% url 'expenses:emi_create' %}" class="btn btn-primary">
+                    <a href="{% url 'emis:emi_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Add EMI
                     </a>
                 </div>
@@ -101,10 +101,10 @@
                                         <button class="btn btn-sm btn-success mark-paid" data-emi-id="{{ emi.id }}">
                                             <i class="fas fa-check"></i> Mark as Paid
                                         </button>
-                                        <a href="{% url 'expenses:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'emis:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'expenses:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
+                                        <a href="{% url 'emis:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </td>
@@ -161,10 +161,10 @@
                                         {% endwith %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'expenses:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'emis:emi_edit' emi.pk %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'expenses:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
+                                        <a href="{% url 'emis:emi_delete' emi.pk %}" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </td>
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const emiId = this.dataset.emiId;
             if (confirm('Are you sure you want to mark this EMI as paid?')) {
-                fetch(`/expenses/emi/${emiId}/mark-paid/`, {
+                fetch(`/emis/${emiId}/mark-paid/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken.value,

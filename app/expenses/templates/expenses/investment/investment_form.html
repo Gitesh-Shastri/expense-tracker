@@ -27,13 +27,28 @@
                             <div class="col-md-6">
                                 <label for="{{ form.amount.id_for_label }}" class="form-label">Amount*</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">₹</span>
+                                    <span class="input-group-text currency-symbol" id="currency-symbol">₹</span>
                                     <input type="number" name="{{ form.amount.name }}" id="{{ form.amount.id_for_label }}" 
                                         value="{{ form.amount.value|default:'' }}" step="0.01" class="form-control {% if form.amount.errors %}is-invalid{% endif %}" required>
                                     {% if form.amount.errors %}
                                         <div class="invalid-feedback">{{ form.amount.errors.0 }}</div>
                                     {% endif %}
                                 </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.currency.id_for_label }}" class="form-label">Currency*</label>
+                                <select name="{{ form.currency.name }}" id="{{ form.currency.id_for_label }}" 
+                                    class="form-select {% if form.currency.errors %}is-invalid{% endif %}" required>
+                                    {% for value, display in form.fields.currency.choices %}
+                                        <option value="{{ value }}" {% if form.currency.value == value %}selected{% endif %} data-symbol="{{ value|cut:"INR"|cut:"USD"|cut:"EUR"|cut:"GBP"|cut:"JPY"|cut:"AUD"|cut:"CAD"|cut:"SGD" }}">
+                                            {{ display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.currency.errors %}
+                                    <div class="invalid-feedback">{{ form.currency.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -53,7 +68,7 @@
                                     <div class="invalid-feedback">{{ form.broker.errors.0 }}</div>
                                 {% endif %}
                                 <div class="form-text">
-                                    <a href="{% url 'expenses:broker_create' %}" target="_blank">
+                                    <a href="{% url 'investments:broker_create' %}" target="_blank">
                                         <i class="fas fa-plus-circle"></i> Add New Broker
                                     </a>
                                 </div>
@@ -74,7 +89,7 @@
                                     <div class="invalid-feedback">{{ form.investment_type.errors.0 }}</div>
                                 {% endif %}
                                 <div class="form-text">
-                                    <a href="{% url 'expenses:investment_type_create' %}" target="_blank">
+                                    <a href="{% url 'investments:investment_type_create' %}" target="_blank">
                                         <i class="fas fa-plus-circle"></i> Add New Type
                                     </a>
                                 </div>
@@ -180,7 +195,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{% url 'expenses:investment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{% url 'investments:investment_list' %}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save Investment</button>
                         </div>
                     </form>
@@ -189,4 +204,41 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currencySelect = document.getElementById('{{ form.currency.id_for_label }}');
+        const currencySymbolSpans = document.querySelectorAll('.input-group-text');
+        
+        // Currency symbols mapping
+        const currencySymbols = {
+            'INR': '₹',
+            'USD': '$',
+            'EUR': '€', 
+            'GBP': '£',
+            'JPY': '¥',
+            'AUD': 'A$',
+            'CAD': 'C$',
+            'SGD': 'S$'
+        };
+        
+        // Update currency symbols when currency changes
+        function updateCurrencySymbols() {
+            const selectedCurrency = currencySelect.value;
+            const symbol = currencySymbols[selectedCurrency] || '₹';
+            
+            currencySymbolSpans.forEach(function(span) {
+                span.textContent = symbol;
+            });
+        }
+        
+        // Set initial currency symbols
+        updateCurrencySymbols();
+        
+        // Update symbols when currency changes
+        currencySelect.addEventListener('change', updateCurrencySymbols);
+    });
+</script>
 {% endblock %}

@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Investment Types</h1>
         <div>
-            <a href="{% url 'expenses:investment_type_create' %}" class="btn btn-primary">
+            <a href="{% url 'investments:investment_type_create' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add Investment Type
             </a>
         </div>
@@ -45,10 +45,10 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'expenses:investment_type_edit' type.id %}" class="btn btn-outline-primary">
+                                    <a href="{% url 'investments:investment_type_edit' type.id %}" class="btn btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{% url 'expenses:investment_type_delete' type.id %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'investments:investment_type_delete' type.id %}" class="btn btn-outline-danger">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>
@@ -60,7 +60,7 @@
             </div>
             {% else %}
             <div class="alert alert-info">
-                No investment types found. <a href="{% url 'expenses:investment_type_create' %}">Add your first investment type</a>.
+                No investment types found. <a href="{% url 'investments:investment_type_create' %}">Add your first investment type</a>.
             </div>
             {% endif %}
         </div>
@@ -68,7 +68,7 @@
 
     <!-- Navigation Links -->
     <div class="mb-4">
-        <a href="{% url 'expenses:investment_list' %}" class="btn btn-outline-primary">
+        <a href="{% url 'investments:investment_list' %}" class="btn btn-outline-primary">
             <i class="fas fa-arrow-left"></i> Back to Investments
         </a>
     </div>

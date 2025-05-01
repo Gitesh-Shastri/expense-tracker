@@ -15,16 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.http import HttpRequest
-from django.shortcuts import redirect
 from django.urls import include, path
-
-
-def redirect_to_admin(request: HttpRequest):
-    return redirect('/admin/')
+from expenses.views import home
 
 urlpatterns = [
-    path('', redirect_to_admin),
+    path('', home, name='home'),  # Set home view as the root URL
     path('admin/', admin.site.urls),
-    path('expenses/', include('expenses.urls')),
+    
+    # Each feature has its own URL namespace for better organization
+    path('expenses/', include('expenses.urls.expense_urls')),
+    path('emis/', include('expenses.urls.emi_urls')),
+    path('investments/', include('expenses.urls.investment_urls')),
 ]
