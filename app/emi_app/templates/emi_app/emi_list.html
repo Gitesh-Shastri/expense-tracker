@@ -86,7 +86,7 @@
                                     <td>{{ emi.description }}</td>
                                     <td>{{ emi.bank.name }}</td>
                                     <td>₹{{ emi.amount|floatformat:2 }}</td>
-                                    <td>{{ emi.due_date_time|date:"d M Y H:i" }}</td>
+                                    <td>{{ emi.due_date_time|date:"d M Y H:i a" }}</td>
                                     <td>{{ emi.end_date|date:"d M Y" }}</td>
                                     <td>
                                         {% with months_remaining=emi.get_months_remaining %}
@@ -149,7 +149,7 @@
                                     <td>{{ emi.description }}</td>
                                     <td>{{ emi.bank.name }}</td>
                                     <td>₹{{ emi.amount|floatformat:2 }}</td>
-                                    <td>{{ emi.due_date_time|date:"d M Y H:i" }}</td>
+                                    <td>{{ emi.due_date_time|date:"d M Y H:i a" }}</td>
                                     <td>{{ emi.end_date|date:"d M Y" }}</td>
                                     <td>
                                         {% with months_remaining=emi.get_months_remaining %}

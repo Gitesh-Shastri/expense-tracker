@@ -154,10 +154,15 @@
         if (!document.getElementById('id_date').value) {
             const now = new Date();
             
-            // Format using ISO string for better timezone handling
-            const isoDateTime = now.toISOString();
-            // Format: YYYY-MM-DDThh:mm
-            const formattedDateTime = isoDateTime.substring(0, isoDateTime.lastIndexOf(':'));
+            // Format date in IST (India is UTC+5:30)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            // Format: YYYY-MM-DDThh:mm (for datetime-local input)
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
             
             document.getElementById('id_date').value = formattedDateTime;
         }

@@ -4,6 +4,9 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from expenses.models import Investment, InvestmentType, Broker
 from .forms import InvestmentForm, BrokerForm, InvestmentTypeForm
+from datetime import datetime, timedelta
+from django.utils import timezone
+import calendar
 
 
 class InvestmentListView(LoginRequiredMixin, ListView):
@@ -88,6 +91,42 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                     'count': broker_investments.count()
                 }
         
+        # Calculate current month and next month investments
+        today = timezone.now().date()
+        current_month_start = today.replace(day=1)
+        next_month = today.replace(day=28) + timedelta(days=4)  # Jump to next month safely
+        next_month_start = next_month.replace(day=1)
+        next_month_end = (next_month_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        
+        # Current month investments (purchased this month)
+        current_month_investments = active_investments.filter(purchase_date__gte=current_month_start, 
+                                                          purchase_date__lte=today)
+        
+        # Calculate monthly summaries by currency
+        current_month_by_currency = {}
+        for investment in current_month_investments:
+            currency = investment.currency
+            if currency not in current_month_by_currency:
+                current_month_by_currency[currency] = 0
+            current_month_by_currency[currency] += investment.amount
+        
+        # Next month investments (maturing next month)
+        next_month_investments = active_investments.filter(maturity_date__gte=next_month_start, 
+                                                        maturity_date__lte=next_month_end)
+        
+        next_month_by_currency = {}
+        for investment in next_month_investments:
+            currency = investment.currency
+            if currency not in next_month_by_currency:
+                next_month_by_currency[currency] = 0
+            
+            # For maturing investments, use current value
+            next_month_by_currency[currency] += (investment.current_price * investment.units)
+        
+        # Format month names for display
+        current_month_name = today.strftime('%B %Y')
+        next_month_name = next_month.strftime('%B %Y')
+        
         context.update({
             'active_investments': active_investments,
             'closed_investments': self.get_queryset().filter(status='CLOSED'),
@@ -99,7 +138,14 @@ class InvestmentListView(LoginRequiredMixin, ListView):
             # Add currency-specific data
             'total_invested_by_currency': total_invested_by_currency,
             'total_value_by_currency': total_value_by_currency,
-            'profit_loss_by_currency': profit_loss_by_currency
+            'profit_loss_by_currency': profit_loss_by_currency,
+            # Add monthly data
+            'current_month_name': current_month_name,
+            'current_month_by_currency': current_month_by_currency,
+            'current_month_investments': current_month_investments,
+            'next_month_name': next_month_name,
+            'next_month_by_currency': next_month_by_currency,
+            'next_month_investments': next_month_investments
         })
         
         return context

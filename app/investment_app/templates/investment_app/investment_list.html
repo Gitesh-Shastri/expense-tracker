@@ -55,6 +55,115 @@
         </div>
     </div>
 
+    <!-- Monthly Investment Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Monthly Investment Summary</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-primary-subtle border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">{{ current_month_name }} Investments</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Total Invested This Month</h6>
+                                <div>
+                                    {% for currency, amount in current_month_by_currency.items %}
+                                        <h5 class="mb-0">
+                                            {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}
+                                        </h5>
+                                    {% empty %}
+                                        <h5 class="mb-0">₹0.00</h5>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for investment in current_month_investments|slice:":5" %}
+                                            <tr>
+                                                <td>{{ investment.name }}</td>
+                                                <td>{{ investment.investment_type.name }}</td>
+                                                <td>{{ investment.get_currency_symbol }}{{ investment.amount|floatformat:2 }}</td>
+                                                <td>{{ investment.purchase_date|date:"d M Y" }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No investments this month</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if current_month_investments.count > 5 %}
+                                <p class="text-muted small text-end">Showing 5 of {{ current_month_investments.count }} investments</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-info-subtle border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">{{ next_month_name }} Maturities</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Expected Maturity Value</h6>
+                                <div>
+                                    {% for currency, amount in next_month_by_currency.items %}
+                                        <h5 class="mb-0">
+                                            {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}
+                                        </h5>
+                                    {% empty %}
+                                        <h5 class="mb-0">₹0.00</h5>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Maturity Value</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for investment in next_month_investments|slice:":5" %}
+                                            <tr>
+                                                <td>{{ investment.name }}</td>
+                                                <td>{{ investment.investment_type.name }}</td>
+                                                <td>{{ investment.get_currency_symbol }}{{ investment.current_price|multiply:investment.units|floatformat:2 }}</td>
+                                                <td>{{ investment.maturity_date|date:"d M Y" }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No investments maturing next month</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if next_month_investments.count > 5 %}
+                                <p class="text-muted small text-end">Showing 5 of {{ next_month_investments.count }} investments</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Investment Types Summary -->
     <div class="row mb-4">
         <div class="col-12">

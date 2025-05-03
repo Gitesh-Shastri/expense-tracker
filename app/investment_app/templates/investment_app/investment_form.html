@@ -179,6 +179,24 @@ document.addEventListener('DOMContentLoaded', function() {
     
     unitsInput.addEventListener('input', updateAmount);
     purchasePriceInput.addEventListener('input', updateAmount);
+    
+    // Set current date for new investments
+    if (!document.querySelector('form').dataset.investmentId && !document.getElementById('id_purchase_date').value) {
+        const now = new Date();
+        
+        // Format date in IST
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        
+        // Format: YYYY-MM-DD (for date input)
+        document.getElementById('id_purchase_date').value = `${year}-${month}-${day}`;
+    }
+    
+    // Set current price to purchase price if it's empty
+    if (!document.getElementById('id_current_price').value && document.getElementById('id_purchase_price').value) {
+        document.getElementById('id_current_price').value = document.getElementById('id_purchase_price').value;
+    }
 });
 </script>
 {% endblock %}

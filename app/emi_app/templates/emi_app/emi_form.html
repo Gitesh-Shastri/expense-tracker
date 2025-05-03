@@ -86,3 +86,25 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set current date for new EMIs
+        if (!document.querySelector('form').id && !document.getElementById('id_due_date_time').value) {
+            const now = new Date();
+            
+            // Format date in IST (for input fields)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            // Set start_date and due_date_time
+            document.getElementById('id_start_date').value = `${year}-${month}-${day}`;
+            document.getElementById('id_due_date_time').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+</script>
+{% endblock %}
