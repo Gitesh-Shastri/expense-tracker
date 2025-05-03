@@ -4,8 +4,10 @@ from django.db.models import Sum
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.contrib import messages
 from .models import Expense, Category, Bank
-from .forms import ExpenseForm
+from .forms import ExpenseForm, BankTransferForm
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -207,6 +209,105 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
         context['categories'] = Category.objects.all()
         context['banks'] = Bank.objects.filter(user=self.request.user)
         return context
+
+
+class BankTransferCreateView(LoginRequiredMixin, CreateView):
+    model = Expense
+    template_name = 'expenses/expense/bank_transfer_form.html'
+    form_class = BankTransferForm
+    success_url = reverse_lazy('expenses:monthly_expenses')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['banks'] = Bank.objects.filter(user=self.request.user)
+        context['is_bank_transfer'] = True
+        return context
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        
+        # Set the date to current date if it's not already set
+        if not initial.get('date'):
+            initial['date'] = timezone.now()
+        
+        # Get bank from URL parameter
+        bank_id = self.request.GET.get('bank')
+        if bank_id:
+            try:
+                bank = Bank.objects.get(id=bank_id, user=self.request.user)
+                initial['bank'] = bank
+            except Bank.DoesNotExist:
+                pass
+                
+        # Handle other parameters
+        initial.update({
+            'amount': self.request.GET.get('amount'),
+            'description': self.request.GET.get('description'),
+        })
+            
+        # Try to find Bank Transfer category
+        try:
+            bank_transfer_category = Category.objects.get(name='Bank Transfer')
+            initial['category'] = bank_transfer_category
+        except Category.DoesNotExist:
+            pass
+            
+        # Remove None values
+        initial = {k: v for k, v in initial.items() if v is not None}
+            
+        return initial
+    
+    def form_valid(self, form):
+        # Set the user
+        form.instance.user = self.request.user
+        
+        # Get all form data
+        source_bank = form.cleaned_data['bank']
+        destination_bank = form.cleaned_data['destination_bank']
+        amount = form.cleaned_data['amount']
+        description = form.cleaned_data['description']
+        date = form.cleaned_data['date']
+        category = form.cleaned_data['category']
+        
+        # Create both transactions within a database transaction
+        with transaction.atomic():
+            # 1. Debit from source bank account
+            debit_transaction = Expense(
+                user=self.request.user,
+                bank=source_bank,
+                amount=amount,
+                description=f"Transfer to {destination_bank.name}: {description}",
+                category=category,
+                transaction_type='DEBIT',
+                date=date
+            )
+            debit_transaction.save()
+            
+            # 2. Credit to destination bank account
+            credit_transaction = Expense(
+                user=self.request.user,
+                bank=destination_bank,
+                amount=amount,
+                description=f"Transfer from {source_bank.name}: {description}",
+                category=category,
+                transaction_type='CREDIT',
+                date=date
+            )
+            credit_transaction.save()
+            
+        # Show a success message
+        messages.success(
+            self.request, 
+            f'Bank transfer of {amount} from {source_bank.name} to {destination_bank.name} created successfully!'
+        )
+        
+        return redirect(self.success_url)
 
 
 class ExpenseUpdateView(LoginRequiredMixin, UpdateView):

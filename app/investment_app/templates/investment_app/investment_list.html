@@ -80,8 +80,8 @@
                                 <tr>
                                     <td>{{ type_data.name }}</td>
                                     <td>{{ type_data.count }}</td>
-                                    <td>₹{{ type_data.amount|floatformat:2 }}</td>
-                                    <td>₹{{ type_data.current_value|floatformat:2 }}</td>
+                                    <td>{{ type_data.currency }} {{ type_data.amount|floatformat:2 }}</td>
+                                    <td>{{ type_data.currency }} {{ type_data.current_value|floatformat:2 }}</td>
                                     <td class="{% if type_data.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
                                         {% if type_data.profit_loss > 0 %}+{% endif %}₹{{ type_data.profit_loss|floatformat:2 }}
                                     </td>
@@ -124,8 +124,8 @@
                                 <tr>
                                     <td>{{ broker_data.name }}</td>
                                     <td>{{ broker_data.count }}</td>
-                                    <td>₹{{ broker_data.amount|floatformat:2 }}</td>
-                                    <td>₹{{ broker_data.current_value|floatformat:2 }}</td>
+                                    <td>{{ broker_data.currency }} {{ broker_data.amount|floatformat:2 }}</td>
+                                    <td>{{ broker_data.currency }} {{ broker_data.current_value|floatformat:2 }}</td>
                                     <td class="{% if broker_data.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
                                         {% if broker_data.profit_loss > 0 %}+{% endif %}₹{{ broker_data.profit_loss|floatformat:2 }}
                                     </td>

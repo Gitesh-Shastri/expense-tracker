@@ -62,6 +62,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                 type_profit_loss = type_investments.aggregate(total=Sum('profit_loss'))['total'] or 0
                 
                 investment_types[investment_type.id] = {
+                    'currency': type_investments.first().get_currency_symbol() if type_investments.exists() else "",
                     'name': investment_type.name,
                     'amount': type_amount,
                     'current_value': type_current_value,
@@ -79,6 +80,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                 broker_profit_loss = broker_investments.aggregate(total=Sum('profit_loss'))['total'] or 0
                 
                 brokers[broker.id] = {
+                    'currency': broker_investments.first().get_currency_symbol() if broker_investments.exists() else "",
                     'name': broker.name,
                     'amount': broker_amount,
                     'current_value': broker_current_value,

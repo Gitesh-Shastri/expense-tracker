@@ -20,6 +20,18 @@
         </div>
     </div>
 
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-end">
+            <a href="{% url 'expenses:bank_transfer' %}" class="btn btn-success me-2">
+                <i class="fas fa-exchange-alt"></i> Bank Transfer
+            </a>
+            <a href="{% url 'expenses:expense_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Transaction
+            </a>
+        </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
@@ -172,9 +184,14 @@
                                 Current Balance: ₹{{ bank_data.current_balance|floatformat:2 }}
                             </small>
                         </div>
-                        <a href="{% url 'expenses:expense_create' %}?bank={{ bank_data.bank.id }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add Transaction
-                        </a>
+                        <div>
+                            <a href="{% url 'expenses:bank_transfer' %}?bank={{ bank_data.bank.id }}" class="btn btn-success me-2">
+                                <i class="fas fa-exchange-alt"></i> Transfer
+                            </a>
+                            <a href="{% url 'expenses:expense_create' %}?bank={{ bank_data.bank.id }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Transaction
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="collapse" id="bankTransactions{{ bank_id }}">

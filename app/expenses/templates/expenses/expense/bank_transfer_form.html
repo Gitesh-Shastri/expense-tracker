@@ -1,0 +1,177 @@
+{% extends 'expensetracker/base.html' %}
+
+{% block title %}Bank Transfer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Bank Transfer
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Please correct the following errors:</strong>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if messages %}
+                <div class="alert alert-success">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_amount" class="form-label">Transfer Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" step="0.01" min="0.01" class="form-control {% if form.amount.errors %}is-invalid{% endif %}" 
+                                   id="id_amount" name="amount" value="{{ form.amount.value|default:'' }}" required>
+                            {% if form.amount.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.amount.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description/Purpose</label>
+                        <input type="text" class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                               id="id_description" name="description" value="{{ form.description.value|default:'' }}" 
+                               placeholder="Purpose of transfer" required>
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label">Category</label>
+                        <select class="form-select {% if form.category.errors %}is-invalid{% endif %}" 
+                                id="id_category" name="category" required readonly>
+                            {% for category in categories %}
+                                {% if category.name == "Bank Transfer" %}
+                                    <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Bank transfers are always categorized as "Bank Transfer"</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_bank" class="form-label">Source Account</label>
+                                <select class="form-select {% if form.bank.errors %}is-invalid{% endif %}" 
+                                        id="id_bank" name="bank" required>
+                                    <option value="">Select source account</option>
+                                    {% for bank in banks %}
+                                        <option value="{{ bank.id }}" 
+                                                {% if form.bank.value == bank.id %}selected{% endif %}>
+                                            {{ bank.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.bank.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.bank.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_destination_bank" class="form-label">Destination Account</label>
+                                <select class="form-select {% if form.destination_bank.errors %}is-invalid{% endif %}" 
+                                        id="id_destination_bank" name="destination_bank" required>
+                                    <option value="">Select destination account</option>
+                                    {% for bank in banks %}
+                                        <option value="{{ bank.id }}" 
+                                                {% if form.destination_bank.value == bank.id %}selected{% endif %}>
+                                            {{ bank.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.destination_bank.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.destination_bank.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="transaction_type" value="DEBIT" id="id_transaction_type">
+
+                    <div class="mb-3">
+                        <label for="id_date" class="form-label">Date & Time of Transfer</label>
+                        <input type="datetime-local" class="form-control {% if form.date.errors %}is-invalid{% endif %}" 
+                               id="id_date" name="date" value="{{ form.date.value|date:'Y-m-d\TH:i'|default:'' }}" required>
+                        {% if form.date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'expenses:monthly_expenses' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            Process Bank Transfer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set current date and time if not set already
+        if (!document.getElementById('id_date').value) {
+            const now = new Date();
+            const isoDateTime = now.toISOString();
+            const formattedDateTime = isoDateTime.substring(0, isoDateTime.lastIndexOf(':'));
+            document.getElementById('id_date').value = formattedDateTime;
+        }
+        
+        // Prevent selecting same bank for source and destination
+        document.getElementById('id_bank').addEventListener('change', function() {
+            validateBanks();
+        });
+        
+        document.getElementById('id_destination_bank').addEventListener('change', function() {
+            validateBanks();
+        });
+        
+        function validateBanks() {
+            const sourceBank = document.getElementById('id_bank').value;
+            const destBank = document.getElementById('id_destination_bank').value;
+            
+            if (sourceBank && destBank && sourceBank === destBank) {
+                alert('Source and destination accounts cannot be the same!');
+                document.getElementById('id_destination_bank').value = '';
+            }
+        }
+    });
+</script>
+{% endblock %}
