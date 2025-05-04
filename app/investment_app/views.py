@@ -6,7 +6,7 @@ from expenses.models import Investment, InvestmentType, Broker
 from .forms import InvestmentForm, BrokerForm, InvestmentTypeForm
 from datetime import datetime, timedelta
 from django.utils import timezone
-import calendar
+from decimal import Decimal
 
 
 class InvestmentListView(LoginRequiredMixin, ListView):
@@ -15,139 +15,126 @@ class InvestmentListView(LoginRequiredMixin, ListView):
     context_object_name = 'investments'
 
     def get_queryset(self):
-        return Investment.objects.filter(user=self.request.user).order_by('-purchase_date')
+        # Get the selected month from the query parameters or use the current month
+        month_str = self.request.GET.get('month')
+        if month_str:
+            selected_month = datetime.strptime(month_str, '%Y-%m')
+        else:
+            selected_month = timezone.now().replace(day=1)
+
+        # Set the selected month for use in the context
+        self.selected_month = selected_month
+
+        # Filter investments by the selected month
+        start_date = selected_month
+        end_date = (selected_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+        return Investment.objects.filter(user=self.request.user, purchase_date__gte=start_date, purchase_date__lte=end_date)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Get active investments
+
+        # Get active and closed investments for the selected month
         active_investments = self.get_queryset().filter(status='ACTIVE')
-        
-        # Dictionary to store totals by currency
-        total_invested_by_currency = {}
-        total_value_by_currency = {}
-        profit_loss_by_currency = {}
-        
-        # Calculate investment summary with currency separation
-        total_invested = 0
-        total_value = 0
-        total_profit_loss = 0
-        
-        for investment in active_investments:
-            # Sum values by currency
-            currency = investment.currency
-            
-            # Calculate the current value of this investment
-            current_value = investment.current_price * investment.units
-            
-            # Update currency-specific dictionaries
-            if currency not in total_invested_by_currency:
-                total_invested_by_currency[currency] = 0
-                total_value_by_currency[currency] = 0
-                profit_loss_by_currency[currency] = 0
-                
-            total_invested_by_currency[currency] += investment.amount
-            total_value_by_currency[currency] += current_value
-            profit_loss_by_currency[currency] += investment.profit_loss
-            
-            # Also track totals for backwards compatibility
-            total_invested += investment.amount
-            total_value += current_value
-            total_profit_loss += investment.profit_loss
-        
+        closed_investments = self.get_queryset().filter(status='CLOSED')
+
+        # Calculate Total Invested, Current Value, and Profit/Loss
+        total_invested = active_investments.aggregate(total=Sum('amount'))['total'] or 0
+        total_value = sum(inv.current_price * inv.units for inv in active_investments)
+        total_profit_loss = total_value - total_invested
+
         # Group investments by type
         investment_types = {}
         for investment_type in InvestmentType.objects.all():
             type_investments = active_investments.filter(investment_type=investment_type)
-            if type_investments:
-                type_amount = type_investments.aggregate(total=Sum('amount'))['total'] or 0
-                type_current_value = sum((inv.current_price * inv.units) for inv in type_investments)
-                type_profit_loss = type_investments.aggregate(total=Sum('profit_loss'))['total'] or 0
-                
+            if type_investments.exists():
                 investment_types[investment_type.id] = {
-                    'currency': type_investments.first().get_currency_symbol() if type_investments.exists() else "",
                     'name': investment_type.name,
-                    'amount': type_amount,
-                    'current_value': type_current_value,
-                    'profit_loss': type_profit_loss,
+                    'currency': type_investments.first().get_currency_symbol(),
+                    'amount': type_investments.aggregate(total=Sum('amount'))['total'] or 0,
+                    'current_value': sum(inv.current_price * inv.units for inv in type_investments),
+                    'profit_loss': type_investments.aggregate(total=Sum('profit_loss'))['total'] or 0,
                     'count': type_investments.count()
                 }
-        
+
         # Group investments by broker
         brokers = {}
         for broker in Broker.objects.filter(user=self.request.user):
             broker_investments = active_investments.filter(broker=broker)
-            if broker_investments:
-                broker_amount = broker_investments.aggregate(total=Sum('amount'))['total'] or 0
-                broker_current_value = sum((inv.current_price * inv.units) for inv in broker_investments)
-                broker_profit_loss = broker_investments.aggregate(total=Sum('profit_loss'))['total'] or 0
-                
+            if broker_investments.exists():
                 brokers[broker.id] = {
-                    'currency': broker_investments.first().get_currency_symbol() if broker_investments.exists() else "",
                     'name': broker.name,
-                    'amount': broker_amount,
-                    'current_value': broker_current_value,
-                    'profit_loss': broker_profit_loss,
+                    'currency': broker_investments.first().get_currency_symbol(),
+                    'amount': broker_investments.aggregate(total=Sum('amount'))['total'] or 0,
+                    'current_value': sum(inv.current_price * inv.units for inv in broker_investments),
+                    'profit_loss': broker_investments.aggregate(total=Sum('profit_loss'))['total'] or 0,
                     'count': broker_investments.count()
                 }
-        
-        # Calculate current month and next month investments
-        today = timezone.now().date()
-        current_month_start = today.replace(day=1)
-        next_month = today.replace(day=28) + timedelta(days=4)  # Jump to next month safely
-        next_month_start = next_month.replace(day=1)
-        next_month_end = (next_month_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-        
-        # Current month investments (purchased this month)
-        current_month_investments = active_investments.filter(purchase_date__gte=current_month_start, 
-                                                          purchase_date__lte=today)
-        
-        # Calculate monthly summaries by currency
-        current_month_by_currency = {}
-        for investment in current_month_investments:
+
+        # Calculate total invested by currency
+        total_invested_by_currency = {}
+        for investment in active_investments:
             currency = investment.currency
-            if currency not in current_month_by_currency:
-                current_month_by_currency[currency] = 0
-            current_month_by_currency[currency] += investment.amount
-        
-        # Next month investments (maturing next month)
-        next_month_investments = active_investments.filter(maturity_date__gte=next_month_start, 
-                                                        maturity_date__lte=next_month_end)
-        
-        next_month_by_currency = {}
-        for investment in next_month_investments:
+            if currency not in total_invested_by_currency:
+                total_invested_by_currency[currency] = 0
+            total_invested_by_currency[currency] += investment.amount
+
+        # Calculate total invested, total value, and profit/loss by currency
+        total_value_by_currency = {}
+        profit_loss_by_currency = {}
+        for investment in active_investments:
             currency = investment.currency
-            if currency not in next_month_by_currency:
-                next_month_by_currency[currency] = 0
-            
-            # For maturing investments, use current value
-            next_month_by_currency[currency] += (investment.current_price * investment.units)
-        
-        # Format month names for display
-        current_month_name = today.strftime('%B %Y')
-        next_month_name = next_month.strftime('%B %Y')
-        
+            if currency not in total_value_by_currency:
+                total_value_by_currency[currency] = 0
+                profit_loss_by_currency[currency] = 0
+
+            current_value = investment.current_price * investment.units
+            total_value_by_currency[currency] += current_value
+            profit_loss_by_currency[currency] += current_value - investment.amount
+
+        # Define currency conversion rates to INR (example rates, replace with actual rates)
+        conversion_rates = {
+            'INR': 1,
+            'USD': 84.58,
+            'EUR': 85,
+            'GBP': 100
+        }
+
+        # Convert total invested, total value, and profit/loss to INR
+        total_invested_inr = 0
+        total_value_inr = 0
+        total_profit_loss_inr = 0
+
+        for investment in active_investments:
+            currency = investment.currency
+            conversion_rate = Decimal(conversion_rates.get(currency, 1))
+
+            total_invested_inr += investment.amount * conversion_rate
+            current_value = investment.current_price * investment.units
+            total_value_inr += current_value * conversion_rate
+            total_profit_loss_inr += (current_value - investment.amount) * conversion_rate
+
+        # Calculate previous and next months for navigation
+        prev_month = self.selected_month - timedelta(days=1)
+        prev_month = prev_month.replace(day=1)
+        next_month = (self.selected_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+
         context.update({
             'active_investments': active_investments,
-            'closed_investments': self.get_queryset().filter(status='CLOSED'),
-            'total_invested': total_invested,
-            'total_value': total_value,
-            'total_profit_loss': total_profit_loss,
+            'closed_investments': closed_investments,
+            'total_invested': total_invested_inr,
+            'total_value': total_value_inr,
+            'total_profit_loss': total_profit_loss_inr,
             'investment_types': investment_types,
             'brokers': brokers,
-            # Add currency-specific data
             'total_invested_by_currency': total_invested_by_currency,
             'total_value_by_currency': total_value_by_currency,
             'profit_loss_by_currency': profit_loss_by_currency,
-            # Add monthly data
-            'current_month_name': current_month_name,
-            'current_month_by_currency': current_month_by_currency,
-            'current_month_investments': current_month_investments,
-            'next_month_name': next_month_name,
-            'next_month_by_currency': next_month_by_currency,
-            'next_month_investments': next_month_investments
+            'current_month_name': self.selected_month.strftime('%B %Y'),
+            'prev_month': prev_month,
+            'next_month': next_month,
         })
-        
+
         return context
 
 

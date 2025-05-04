@@ -6,6 +6,21 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Month Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="?month={{ prev_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Previous Month
+                </a>
+                <h2 class="text-center mb-0">{{ current_month_name }} {{ current_year }}</h2>
+                <a href="?month={{ next_month|date:'Y-m' }}" class="btn btn-outline-primary">
+                    Next Month <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-12">
@@ -15,10 +30,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body">
                             <h5 class="card-title">Total Invested</h5>
-                            <h2 class="card-text">
-                                {% for currency, amount in total_invested_by_currency.items %}
-                                    {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}<br>
-                                {% endfor %}
+                            <h2 class="card-text">₹{{ total_invested|floatformat:2 }}
                             </h2>
                         </div>
                     </div>
@@ -27,10 +39,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">Current Value</h5>
-                            <h2 class="card-text">
-                                {% for currency, amount in total_value_by_currency.items %}
-                                    {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}<br>
-                                {% endfor %}
+                            <h2 class="card-text">₹{{ total_value|floatformat:2 }}
                             </h2>
                         </div>
                     </div>
@@ -40,123 +49,12 @@
                         <div class="card-body">
                             <h5 class="card-title">Profit/Loss</h5>
                             <h2 class="card-text">
-                                {% for currency, amount in profit_loss_by_currency.items %}
-                                    {% if amount > 0 %}
-                                        <span class="text-white">+{% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}</span><br>
-                                    {% else %}
-                                        <span class="text-white">{% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}</span><br>
-                                    {% endif %}
-                                {% endfor %}
+                                {% if total_profit_loss > 0 %}
+                                    <span class="text-white">+₹{{ total_profit_loss|floatformat:2 }}</span><br>
+                                {% else %}
+                                    <span class="text-white">₹{{ total_profit_loss|floatformat:2 }}</span><br>
+                                {% endif %}
                             </h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Monthly Investment Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-3">Monthly Investment Summary</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card bg-primary-subtle border-primary">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">{{ current_month_name }} Investments</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Total Invested This Month</h6>
-                                <div>
-                                    {% for currency, amount in current_month_by_currency.items %}
-                                        <h5 class="mb-0">
-                                            {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}
-                                        </h5>
-                                    {% empty %}
-                                        <h5 class="mb-0">₹0.00</h5>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Amount</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for investment in current_month_investments|slice:":5" %}
-                                            <tr>
-                                                <td>{{ investment.name }}</td>
-                                                <td>{{ investment.investment_type.name }}</td>
-                                                <td>{{ investment.get_currency_symbol }}{{ investment.amount|floatformat:2 }}</td>
-                                                <td>{{ investment.purchase_date|date:"d M Y" }}</td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="4" class="text-center">No investments this month</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% if current_month_investments.count > 5 %}
-                                <p class="text-muted small text-end">Showing 5 of {{ current_month_investments.count }} investments</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card bg-info-subtle border-info">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0">{{ next_month_name }} Maturities</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Expected Maturity Value</h6>
-                                <div>
-                                    {% for currency, amount in next_month_by_currency.items %}
-                                        <h5 class="mb-0">
-                                            {% if currency == 'INR' %}₹{% elif currency == 'USD' %}${% elif currency == 'EUR' %}€{% elif currency == 'GBP' %}£{% else %}{{ currency }}{% endif %}{{ amount|floatformat:2 }}
-                                        </h5>
-                                    {% empty %}
-                                        <h5 class="mb-0">₹0.00</h5>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Maturity Value</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for investment in next_month_investments|slice:":5" %}
-                                            <tr>
-                                                <td>{{ investment.name }}</td>
-                                                <td>{{ investment.investment_type.name }}</td>
-                                                <td>{{ investment.get_currency_symbol }}{{ investment.current_price|multiply:investment.units|floatformat:2 }}</td>
-                                                <td>{{ investment.maturity_date|date:"d M Y" }}</td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="4" class="text-center">No investments maturing next month</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% if next_month_investments.count > 5 %}
-                                <p class="text-muted small text-end">Showing 5 of {{ next_month_investments.count }} investments</p>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -256,11 +154,8 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Active Investments</h5>
-                    <a href="{% url 'investment_app:investment_create' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Investment
-                    </a>
+                <div class="card-header">
+                    <h5 class="mb-0">Active Investments for {{ current_month_name }} {{ current_year }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -304,7 +199,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="10" class="text-center">No active investments found.</td>
+                                    <td colspan="10" class="text-center">No active investments for {{ current_month_name }} {{ current_year }}.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -317,10 +212,10 @@
 
     <!-- Closed Investments -->
     <div class="row">
-        <div class="col-12">
+        <div class="col-12"></div>
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Closed Investments</h5>
+                    <h5 class="mb-0">Closed Investments for {{ current_month_name }} {{ current_year }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -360,7 +255,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center">No closed investments found.</td>
+                                    <td colspan="8" class="text-center">No closed investments for {{ current_month_name }} {{ current_year }}.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
