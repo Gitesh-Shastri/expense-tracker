@@ -1,7 +1,7 @@
 {% extends 'expensetracker/base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Edit Investment{% else %}Add Investment{% endif %}{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Investment{% elif clone_mode %}Clone Investment{% else %}Add Investment{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,7 +9,7 @@
         <div class="col-md-10 offset-md-1">
             <div class="card">
                 <div class="card-header">
-                    <h4>{% if form.instance.pk %}Edit Investment{% else %}Add Investment{% endif %}</h4>
+                    <h4>{% if form.instance.pk %}Edit Investment{% elif clone_mode %}Clone Investment{% else %}Add Investment{% endif %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -20,7 +20,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="id_name" class="form-label">Investment Name</label>
-                                    <input type="text" name="name" class="form-control" id="id_name" value="{{ form.instance.name|default:'' }}" required>
+                                    <input type="text" name="name" class="form-control" id="id_name" value="{{ form.initial.name|default:form.instance.name|default:'' }}" required>
                                     {% if form.name.errors %}
                                         <div class="text-danger">{{ form.name.errors.0 }}</div>
                                     {% endif %}
@@ -31,7 +31,7 @@
                                     <select name="broker" class="form-select" id="id_broker" required>
                                         <option value="">-- Select Broker --</option>
                                         {% for broker in form.fields.broker.queryset %}
-                                        <option value="{{ broker.id }}" {% if form.instance.broker_id == broker.id %}selected{% endif %}>{{ broker.name }}</option>
+                                        <option value="{{ broker.id }}" {% if form.instance.broker_id == broker.id or form.initial.broker.id == broker.id %}selected{% endif %}>{{ broker.name }}</option>
                                         {% endfor %}
                                     </select>
                                     {% if form.broker.errors %}
@@ -44,7 +44,7 @@
                                     <select name="investment_type" class="form-select" id="id_investment_type" required>
                                         <option value="">-- Select Type --</option>
                                         {% for inv_type in investment_types %}
-                                        <option value="{{ inv_type.id }}" {% if form.instance.investment_type_id == inv_type.id %}selected{% endif %}>{{ inv_type.name }}</option>
+                                        <option value="{{ inv_type.id }}" {% if form.instance.investment_type_id == inv_type.id  or form.initial.investment_type.id == inv_type.id%}selected{% endif %}>{{ inv_type.name }}</option>
                                         {% endfor %}
                                     </select>
                                     {% if form.investment_type.errors %}
@@ -56,16 +56,16 @@
                                     <label for="id_amount" class="form-label">Amount</label>
                                     <div class="input-group">
                                         <select name="currency" class="form-select" id="id_currency" style="max-width: 100px;">
-                                            <option value="INR" {% if form.instance.currency == 'INR' %}selected{% endif %}>₹ INR</option>
-                                            <option value="USD" {% if form.instance.currency == 'USD' %}selected{% endif %}>$ USD</option>
-                                            <option value="EUR" {% if form.instance.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
-                                            <option value="GBP" {% if form.instance.currency == 'GBP' %}selected{% endif %}>£ GBP</option>
-                                            <option value="JPY" {% if form.instance.currency == 'JPY' %}selected{% endif %}>¥ JPY</option>
-                                            <option value="AUD" {% if form.instance.currency == 'AUD' %}selected{% endif %}>A$ AUD</option>
-                                            <option value="CAD" {% if form.instance.currency == 'CAD' %}selected{% endif %}>C$ CAD</option>
-                                            <option value="SGD" {% if form.instance.currency == 'SGD' %}selected{% endif %}>S$ SGD</option>
+                                            <option value="INR" {% if form.initial.currency == 'INR' or form.instance.currency == 'INR' %}selected{% endif %}>₹ INR</option>
+                                            <option value="USD" {% if form.initial.currency == 'USD' or form.instance.currency == 'USD' %}selected{% endif %}>$ USD</option>
+                                            <option value="EUR" {% if form.initial.currency == 'EUR' or form.instance.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
+                                            <option value="GBP" {% if form.initial.currency == 'GBP' or form.instance.currency == 'GBP' %}selected{% endif %}>£ GBP</option>
+                                            <option value="JPY" {% if form.initial.currency == 'JPY' or form.instance.currency == 'JPY' %}selected{% endif %}>¥ JPY</option>
+                                            <option value="AUD" {% if form.initial.currency == 'AUD' or form.instance.currency == 'AUD' %}selected{% endif %}>A$ AUD</option>
+                                            <option value="CAD" {% if form.initial.currency == 'CAD' or form.instance.currency == 'CAD' %}selected{% endif %}>C$ CAD</option>
+                                            <option value="SGD" {% if form.initial.currency == 'SGD' or form.instance.currency == 'SGD' %}selected{% endif %}>S$ SGD</option>
                                         </select>
-                                        <input type="number" name="amount" step="0.01" min="0" class="form-control" id="id_amount" value="{{ form.instance.amount|default:'' }}" required>
+                                        <input type="number" name="amount" step="0.01" min="0" class="form-control" id="id_amount" value="{{ form.initial.amount|default:form.instance.amount|default:'' }}" required>
                                     </div>
                                     {% if form.amount.errors %}
                                         <div class="text-danger">{{ form.amount.errors.0 }}</div>
@@ -77,7 +77,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="id_units" class="form-label">Units</label>
-                                    <input type="number" name="units" step="0.0001" min="0.0001" class="form-control" id="id_units" value="{{ form.instance.units|default:'1.0000' }}">
+                                    <input type="number" name="units" step="0.0001" min="0.0001" class="form-control" id="id_units" value="{{ form.initial.units|default:form.instance.units|default:'1.0000' }}">
                                     {% if form.units.errors %}
                                         <div class="text-danger">{{ form.units.errors.0 }}</div>
                                     {% endif %}
@@ -85,7 +85,7 @@
                                 
                                 <div class="mb-3">
                                     <label for="id_purchase_price" class="form-label">Purchase Price (per unit)</label>
-                                    <input type="number" name="purchase_price" step="0.01" min="0" class="form-control" id="id_purchase_price" value="{{ form.instance.purchase_price|default:'' }}" required>
+                                    <input type="number" name="purchase_price" step="0.01" min="0" class="form-control" id="id_purchase_price" value="{{ form.initial.purchase_price|default:form.instance.purchase_price|default:'' }}" required>
                                     {% if form.purchase_price.errors %}
                                         <div class="text-danger">{{ form.purchase_price.errors.0 }}</div>
                                     {% endif %}
@@ -93,7 +93,7 @@
                                 
                                 <div class="mb-3">
                                     <label for="id_current_price" class="form-label">Current Price (per unit)</label>
-                                    <input type="number" name="current_price" step="0.01" min="0" class="form-control" id="id_current_price" value="{{ form.instance.current_price|default:'' }}" required>
+                                    <input type="number" name="current_price" step="0.01" min="0" class="form-control" id="id_current_price" value="{{ form.initial.current_price|default:form.instance.current_price|default:'' }}" required>
                                     {% if form.current_price.errors %}
                                         <div class="text-danger">{{ form.current_price.errors.0 }}</div>
                                     {% endif %}
@@ -101,7 +101,7 @@
                                 
                                 <div class="mb-3">
                                     <label for="id_purchase_date" class="form-label">Purchase Date</label>
-                                    <input type="date" name="purchase_date" class="form-control" id="id_purchase_date" value="{{ form.instance.purchase_date|date:'Y-m-d'|default:'' }}" required>
+                                    <input type="date" name="purchase_date" class="form-control" id="id_purchase_date" value="{{ form.initial.purchase_date|date:'Y-m-d'|default:form.instance.purchase_date|date:'Y-m-d'|default:'' }}" required>
                                     {% if form.purchase_date.errors %}
                                         <div class="text-danger">{{ form.purchase_date.errors.0 }}</div>
                                     {% endif %}
@@ -114,8 +114,8 @@
                                 <div class="mb-3">
                                     <label for="id_transaction_type" class="form-label">Transaction Type</label>
                                     <select name="transaction_type" class="form-select" id="id_transaction_type" required>
-                                        <option value="BUY" {% if form.instance.transaction_type == 'BUY' %}selected{% endif %}>Buy</option>
-                                        <option value="SELL" {% if form.instance.transaction_type == 'SELL' %}selected{% endif %}>Sell</option>
+                                        <option value="BUY" {% if form.initial.transaction_type == 'BUY' or form.instance.transaction_type == 'BUY' %}selected{% endif %}>Buy</option>
+                                        <option value="SELL" {% if form.initial.transaction_type == 'SELL' or form.instance.transaction_type == 'SELL' %}selected{% endif %}>Sell</option>
                                     </select>
                                     {% if form.transaction_type.errors %}
                                         <div class="text-danger">{{ form.transaction_type.errors.0 }}</div>
@@ -126,8 +126,8 @@
                                 <div class="mb-3">
                                     <label for="id_status" class="form-label">Status</label>
                                     <select name="status" class="form-select" id="id_status" required>
-                                        <option value="ACTIVE" {% if form.instance.status == 'ACTIVE' %}selected{% endif %}>Active</option>
-                                        <option value="CLOSED" {% if form.instance.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                                        <option value="ACTIVE" {% if form.initial.status == 'ACTIVE' or form.instance.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                                        <option value="CLOSED" {% if form.initial.status == 'CLOSED' or form.instance.status == 'CLOSED' %}selected{% endif %}>Closed</option>
                                     </select>
                                     {% if form.status.errors %}
                                         <div class="text-danger">{{ form.status.errors.0 }}</div>
@@ -153,7 +153,7 @@
                         </div>
                         
                         <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Save Changes{% else %}Add Investment{% endif %}</button>
+                            <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Save Changes{% elif clone_mode %}Clone Investment{% else %}Add Investment{% endif %}</button>
                             <a href="{% url 'investment_app:investment_list' %}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
                     </form>

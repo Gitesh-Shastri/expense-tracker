@@ -159,6 +159,51 @@ class InvestmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
+class InvestmentCloneView(LoginRequiredMixin, CreateView):
+    model = Investment
+    template_name = 'investment_app/investment_form.html'
+    form_class = InvestmentForm
+    success_url = reverse_lazy('investment_app:investment_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        
+        # Get the original investment to clone
+        original_id = self.kwargs.get('pk')
+        if original_id:
+            original = Investment.objects.filter(pk=original_id, user=self.request.user).first()
+            if original and not kwargs.get('instance'):
+                # Use original's data but create a new form instance
+                kwargs['initial'] = {
+                    'broker': original.broker,
+                    'investment_type': original.investment_type,
+                    'name': original.name,
+                    'amount': original.amount,
+                    'currency': original.currency,
+                    'units': original.units,
+                    'purchase_price': original.purchase_price,
+                    'current_price': original.current_price,
+                    'purchase_date': timezone.now().date(),  # Use current date
+                    'transaction_type': original.transaction_type,
+                    'status': original.status,
+                    'maturity_date': original.maturity_date,
+                    'notes': original.notes
+                }
+        return kwargs
+    
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['investment_types'] = InvestmentType.objects.all()
+        context['clone_mode'] = True
+        context['original_id'] = self.kwargs.get('pk')
+        return context
+
+
 class InvestmentUpdateView(LoginRequiredMixin, UpdateView):
     model = Investment
     template_name = 'investment_app/investment_form.html'

@@ -9,6 +9,7 @@ urlpatterns = [
     path('create/', views.InvestmentCreateView.as_view(), name='investment_create'),
     path('<int:pk>/edit/', views.InvestmentUpdateView.as_view(), name='investment_edit'),
     path('<int:pk>/delete/', views.InvestmentDeleteView.as_view(), name='investment_delete'),
+    path('<int:pk>/clone/', views.InvestmentCloneView.as_view(), name='investment_clone'),
     
     # Broker URLs
     path('brokers/', views.BrokerListView.as_view(), name='broker_list'),

@@ -154,8 +154,9 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Active Investments for {{ current_month_name }} {{ current_year }}</h5>
+                    <a href="{% url 'investment_app:investment_create' %}" class="btn btn-sm btn-outline-primary">Create Investment</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -191,6 +192,9 @@
                                     <td>
                                         <a href="{% url 'investment_app:investment_edit' investment.pk %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'investment_app:investment_clone' investment.pk %}" class="btn btn-sm btn-outline-info" title="Clone">
+                                            <i class="fas fa-copy"></i>
                                         </a>
                                         <a href="{% url 'investment_app:investment_delete' investment.pk %}" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
@@ -247,6 +251,9 @@
                                     <td>
                                         <a href="{% url 'investment_app:investment_edit' investment.pk %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'investment_app:investment_clone' investment.pk %}" class="btn btn-sm btn-outline-info" title="Clone">
+                                            <i class="fas fa-copy"></i>
                                         </a>
                                         <a href="{% url 'investment_app:investment_delete' investment.pk %}" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
