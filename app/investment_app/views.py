@@ -95,7 +95,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         # Define currency conversion rates to INR (example rates, replace with actual rates)
         conversion_rates = {
             'INR': 1,
-            'USD': 84.58,
+            'USD': 86.19,
             'EUR': 85,
             'GBP': 100
         }
